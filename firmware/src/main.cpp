@@ -6,12 +6,16 @@
 #include <stdio.h>
 #include "Arduino.h"
 #include "sd_card.h"
+#include "audio_decoder.h"
 
 static const char* TAG = "main";
 
-// Create global SD card instance
+// Create global instances
 extern SDCard* create_sd_card();
+extern AudioDecoder* create_audio_decoder();
+
 SDCard* g_sd_card = nullptr;
+AudioDecoder* g_decoder = nullptr;
 
 void setup() {
     Serial.begin(115200);
@@ -26,7 +30,7 @@ void setup() {
     if (!g_sd_card->init()) {
         Serial.println("FATAL: SD card initialization failed");
         while (1) {
-            delay(1000);  // Halt
+            delay(1000);
         }
     }
     
@@ -38,9 +42,35 @@ void setup() {
         Serial.printf("  [%d] %s\n", i, files[i]);
     }
     
+    /* Initialize MP3 Decoder */
+    g_decoder = create_audio_decoder();
+    if (!g_decoder) {
+        Serial.println("FATAL: Could not create decoder");
+        while (1) delay(1000);
+    }
+    
+    /* Test: Open first MP3 file if available */
+    if (num_files > 0 && g_sd_card->open_file(files[0])) {
+        Serial.printf("[MAIN] Opened MP3: %s\n", files[0]);
+        
+        /* Read first 64 bytes */
+        uint8_t header[64];
+        int bytes = g_sd_card->read_data(header, 64);
+        Serial.printf("[MAIN] Read %d bytes from file\n", bytes);
+        
+        if (bytes > 0) {
+            Serial.print("[MAIN] Header hex: ");
+            for (int i = 0; i < (bytes < 16 ? bytes : 16); i++) {
+                Serial.printf("%02X ", header[i]);
+            }
+            Serial.println();
+        }
+        
+        g_sd_card->close_file();
+    }
+    
     /* TODO: Initialize other modules */
     // - Event queue
-    // - Audio decoder
     // - Bluetooth A2DP
     // - Display
     // - Button handler
@@ -52,7 +82,7 @@ void setup() {
 }
 
 void loop() {
-    delay(1000);
+    delay(5000);
     Serial.println("Main loop heartbeat");
 }
 
