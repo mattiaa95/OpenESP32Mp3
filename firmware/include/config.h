@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CONFIG_H
+#define CONFIG_H
 
 /* ============================================================================
  * ESP32-BT-MP3-Player Configuration Header
@@ -113,9 +114,6 @@
 #define FEATURE_BUTTON_CONTROLS  1  // Enable button input
 #define FEATURE_SD_CARD          1  // Enable SD card
 
-/* ============================================================================
- * Validation Macros
- * ========================================================================== */
 #if AUDIO_RING_BUFFER_SIZE < 8192
     #error "Audio ring buffer must be >= 8 KB"
 #endif

@@ -5,8 +5,13 @@
 
 #include <stdio.h>
 #include "Arduino.h"
+#include "sd_card.h"
 
 static const char* TAG = "main";
+
+// Create global SD card instance
+extern SDCard* create_sd_card();
+SDCard* g_sd_card = nullptr;
 
 void setup() {
     Serial.begin(115200);
@@ -14,24 +19,36 @@ void setup() {
     
     Serial.println("\n\n=== ESP32 Bluetooth MP3 Player ===");
     Serial.println("Firmware starting...");
+    Serial.printf("Build: %s %s\n", __DATE__, __TIME__);
     
-    /* Initialize all modules here (Phase 1: stubs) */
-    // TODO: Initialize event queue
-    // TODO: Initialize SD card
-    // TODO: Initialize audio decoder
-    // TODO: Initialize Bluetooth A2DP
-    // TODO: Initialize display
-    // TODO: Initialize button handler
+    /* Initialize SD Card */
+    g_sd_card = create_sd_card();
+    if (!g_sd_card->init()) {
+        Serial.println("FATAL: SD card initialization failed");
+        while (1) {
+            delay(1000);  // Halt
+        }
+    }
     
-    /* Create FreeRTOS tasks */
-    // TODO: xTaskCreatePinnedToCore(audio_decode_task, ...);
-    // TODO: xTaskCreatePinnedToCore(bluetooth_feed_task, ...);
-    // TODO: xTaskCreatePinnedToCore(display_refresh_task, ...);
-    // TODO: xTaskCreatePinnedToCore(button_debounce_task, ...);
-    // TODO: xTaskCreatePinnedToCore(playback_control_task, ...);
-    // TODO: xTaskCreatePinnedToCore(sd_card_task, ...);
+    /* List MP3 files */
+    const char* files[20];
+    int num_files = g_sd_card->list_files(files, 20);
+    Serial.printf("Found %d MP3 files on SD card\n", num_files);
+    for (int i = 0; i < num_files; i++) {
+        Serial.printf("  [%d] %s\n", i, files[i]);
+    }
     
-    Serial.println("All tasks started");
+    /* TODO: Initialize other modules */
+    // - Event queue
+    // - Audio decoder
+    // - Bluetooth A2DP
+    // - Display
+    // - Button handler
+    
+    /* TODO: Create FreeRTOS tasks */
+    // xTaskCreatePinnedToCore(...);
+    
+    Serial.println("Setup complete");
 }
 
 void loop() {
